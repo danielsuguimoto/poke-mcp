@@ -1,0 +1,28 @@
+{
+  "name": "poke-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server that lets external agents send messages to Poke, deployed on Cloudflare Workers.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.mjs",
+    "types": "wrangler types"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "agents": "0.21.0",
+    "poke": "4.0.461",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20260826.1",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@types/node": "24.10.1",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "wrangler": "4.126.0"
+  }
+}
