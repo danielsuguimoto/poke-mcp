@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
-import { Poke } from "poke";
+import { Poke } from "./poke-sdk";
 import { registerTools } from "./tools";
 
 const SERVER_NAME = "poke-mcp";

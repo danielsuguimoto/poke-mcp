@@ -44,6 +44,10 @@ npm run deploy       # wrangler deploy
 
 `wrangler.jsonc` already sets `nodejs_compat` (required — the `poke` SDK bundle imports `node:*` builtins even though `sendMessage` only needs `fetch`).
 
+### Note: which `poke` bundle is used
+
+The package's ESM entry (`dist/index.mjs`) executes `createRequire(import.meta.url)` at module scope, which throws in the Workers runtime (`import.meta.url` is undefined → Cloudflare error 10021). Its `exports` map also blocks the bare `poke/dist/index.cjs` specifier. `src/poke-sdk.ts` therefore imports the CommonJS bundle by relative path and `src/node-shims.ts` defines the `__filename`/`__dirname` globals workerd lacks (only referenced by the `poke login` browser-open code path, which a Worker never runs). Same official SDK, same API — only the module entry differs.
+
 ### Optional: override the Poke API base URL
 
 By default the SDK calls `https://poke.com/api/v1`. To point elsewhere (e.g. staging), add to `wrangler.jsonc`:

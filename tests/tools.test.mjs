@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { McpServer } from "@modelcontextprotocol/server";
-import { Poke } from "poke";
+import { Poke } from "../src/poke-sdk.ts";
 import { registerTools } from "../src/tools.ts";
 
 async function createServer(t) {
