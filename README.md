@@ -19,7 +19,7 @@ MCP server on Cloudflare Workers that bridges external agents to [Poke](https://
 | `create_webhook` | `poke.createWebhook({condition, action})` | Create a Poke webhook trigger; returns `webhookUrl` + `webhookToken` |
 | `send_webhook` | `poke.sendWebhook({webhookUrl, webhookToken, data})` | Fire a webhook trigger with a JSON payload |
 
-Progress tracking follows the Pally MCP pattern: `send_message` tags each request with a `taskId` and tells Poke to report status for it; `check_task` later asks Poke for that task's progress. The worker stays stateless — Poke itself holds the task state. Sender attribution uses the optional `agent_name` argument, falling back to the MCP client's reported name.
+Progress tracking follows the Pally MCP pattern: `send_message` tags each request with a `taskId` and tells Poke to report status for it; `check_task` later asks Poke for that task's progress. The worker stays stateless — Poke itself holds the task state. Both tools require a nonblank `agent_name` argument (1–200 characters after trimming) for sender attribution; the MCP client's initialize-time name is not available across HTTP requests.
 
 ## Endpoints
 

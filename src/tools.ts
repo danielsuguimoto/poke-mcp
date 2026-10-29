@@ -11,10 +11,6 @@ function errorResult(error: unknown) {
   return { content: [{ type: "text" as const, text: message }], isError: true as const };
 }
 
-function senderName(server: McpServer, explicit?: string): string {
-  return explicit?.trim() || server.server.getClientVersion()?.name?.trim() || "an unidentified MCP client";
-}
-
 function taskPrompt(taskId: string, sender: string, message: string): string {
   return (
     `[poke-mcp] This message was sent by the AI agent "${sender}" through the poke-mcp MCP server.\n` +
@@ -37,16 +33,16 @@ export function registerTools(server: McpServer, poke: Poke): void {
         message: z.string().min(1).max(10000).describe("Text message to send to Poke."),
         agent_name: z
           .string()
+          .trim()
           .min(1)
           .max(200)
-          .optional()
-          .describe("Your name as the sending agent. Defaults to the MCP client's reported name."),
+          .describe("Your name as the sending agent. Required because this server is stateless."),
       },
     },
     async ({ message, agent_name }) => {
       try {
         const taskId = crypto.randomUUID();
-        const sender = senderName(server, agent_name);
+        const sender = agent_name;
         const response = await poke.sendMessage(taskPrompt(taskId, sender, message));
         return jsonResult({ taskId, sender, response });
       } catch (error) {
@@ -72,15 +68,15 @@ export function registerTools(server: McpServer, poke: Poke): void {
           .describe("Optional extra question or context for the status check."),
         agent_name: z
           .string()
+          .trim()
           .min(1)
           .max(200)
-          .optional()
-          .describe("Your name as the sending agent. Defaults to the MCP client's reported name."),
+          .describe("Your name as the sending agent. Required because this server is stateless."),
       },
     },
     async ({ task_id, note, agent_name }) => {
       try {
-        const sender = senderName(server, agent_name);
+        const sender = agent_name;
         const prompt =
           `[poke-mcp] Progress check from agent "${sender}" via the poke-mcp MCP server.\n` +
           `What is the current status or result of Task ID ${task_id}?` +
