@@ -11,20 +11,82 @@ function errorResult(error: unknown) {
   return { content: [{ type: "text" as const, text: message }], isError: true as const };
 }
 
+function senderName(server: McpServer, explicit?: string): string {
+  return explicit?.trim() || server.server.getClientVersion()?.name?.trim() || "an unidentified MCP client";
+}
+
+function taskPrompt(taskId: string, sender: string, message: string): string {
+  return (
+    `[poke-mcp] This message was sent by the AI agent "${sender}" through the poke-mcp MCP server.\n` +
+    `Task ID: ${taskId}\n` +
+    `Treat this message as a task. If you later receive a message asking for progress on this Task ID, ` +
+    `report the current status and any result.\n\n` +
+    message
+  );
+}
+
 export function registerTools(server: McpServer, poke: Poke): void {
   server.registerTool(
     "send_message",
     {
       description:
         "Send a text message to the Poke agent associated with the request's API key. " +
-        "Poke treats the text as an instruction or question from the account owner.",
+        "The message is attributed to the sending agent and carries a taskId; the " +
+        "returned taskId can be passed to check_task to ask Poke for progress.",
       inputSchema: {
         message: z.string().min(1).max(10000).describe("Text message to send to Poke."),
+        agent_name: z
+          .string()
+          .min(1)
+          .max(200)
+          .optional()
+          .describe("Your name as the sending agent. Defaults to the MCP client's reported name."),
       },
     },
-    async ({ message }) => {
+    async ({ message, agent_name }) => {
       try {
-        return jsonResult(await poke.sendMessage(message));
+        const taskId = crypto.randomUUID();
+        const sender = senderName(server, agent_name);
+        const response = await poke.sendMessage(taskPrompt(taskId, sender, message));
+        return jsonResult({ taskId, sender, response });
+      } catch (error) {
+        return errorResult(error);
+      }
+    },
+  );
+
+  server.registerTool(
+    "check_task",
+    {
+      description:
+        "Ask Poke for the progress or result of a task previously sent with send_message. " +
+        "Pass the taskId returned by send_message. Poke is stateful, so it answers from " +
+        "its own memory of the task.",
+      inputSchema: {
+        task_id: z.string().min(1).describe("taskId returned by send_message."),
+        note: z
+          .string()
+          .min(1)
+          .max(2000)
+          .optional()
+          .describe("Optional extra question or context for the status check."),
+        agent_name: z
+          .string()
+          .min(1)
+          .max(200)
+          .optional()
+          .describe("Your name as the sending agent. Defaults to the MCP client's reported name."),
+      },
+    },
+    async ({ task_id, note, agent_name }) => {
+      try {
+        const sender = senderName(server, agent_name);
+        const prompt =
+          `[poke-mcp] Progress check from agent "${sender}" via the poke-mcp MCP server.\n` +
+          `What is the current status or result of Task ID ${task_id}?` +
+          (note ? `\n${note}` : "");
+        const response = await poke.sendMessage(prompt);
+        return jsonResult({ taskId: task_id, sender, response });
       } catch (error) {
         return errorResult(error);
       }

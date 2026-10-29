@@ -36,11 +36,11 @@ async function createServer(t) {
   return { request };
 }
 
-test("exposes send_message, create_webhook, and send_webhook tools", async (t) => {
+test("exposes send_message, check_task, create_webhook, and send_webhook tools", async (t) => {
   const { request } = await createServer(t);
   const { result } = await request("tools/list");
   const names = result.tools.map((tool) => tool.name).sort();
-  assert.deepEqual(names, ["create_webhook", "send_message", "send_webhook"]);
+  assert.deepEqual(names, ["check_task", "create_webhook", "send_message", "send_webhook"]);
 });
 
 test("send_message validates its input", async (t) => {
